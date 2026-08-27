@@ -1,0 +1,15 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": "./src",
+    "declaration": false,
+    "module": "commonjs",
+    "outDir": "../../dist/apps/api",
+    "rootDir": "./src",
+    "sourceMap": true,
+    "tsBuildInfoFile": "../../dist/apps/api/tsconfig.app.tsbuildinfo",
+    "types": ["node"]
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["src/**/*.spec.ts", "src/**/*.test.ts"]
+}

@@ -10,3 +10,12 @@ Planned boundaries:
 - `src/common`: Guards, filters, interceptors, decorators, and shared NestJS utilities.
 
 Each feature should keep transport, application services, domain rules, and persistence adapters clearly separated.
+
+## Phase 3 Runtime
+
+- `npm run dev -w @taskflow/api` starts the local API in watch mode.
+- `npm run build -w @taskflow/api` compiles the API to `dist/apps/api`.
+- `GET /api/v1/health` returns service liveness metadata.
+- `GET /api/v1/meta` returns public API metadata.
+
+Configuration is loaded through `@nestjs/config` and validated with Zod before the server starts.
