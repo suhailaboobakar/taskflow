@@ -1,0 +1,31 @@
+{
+  "name": "taskflow",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A premium task management platform built with React, NestJS, Prisma, and PostgreSQL.",
+  "type": "module",
+  "engines": {
+    "node": ">=22.0.0",
+    "npm": ">=10.0.0"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "node ./scripts/verify-workspace.mjs",
+    "dev": "node ./scripts/verify-workspace.mjs",
+    "lint": "node ./scripts/verify-workspace.mjs",
+    "test": "node ./scripts/verify-workspace.mjs",
+    "typecheck": "node ./scripts/verify-workspace.mjs",
+    "format": "node ./scripts/verify-workspace.mjs"
+  },
+  "keywords": [
+    "task-management",
+    "productivity",
+    "react",
+    "nestjs",
+    "prisma"
+  ],
+  "license": "UNLICENSED"
+}
