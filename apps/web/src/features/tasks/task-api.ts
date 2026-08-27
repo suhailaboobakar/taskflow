@@ -54,7 +54,7 @@ export type UpdateTaskPayload = Partial<CreateTaskPayload> & {
   status?: TaskStatus;
 };
 
-const apiBaseUrl = import.meta.env.VITE_API_URL ?? "http://localhost:4000/api/v1";
+const apiBaseUrl = import.meta.env.VITE_API_URL ?? "http://localhost:3000/api/v1";
 
 async function request<TResponse>(path: string, options: RequestInit & { token?: string } = {}): Promise<TResponse> {
   const headers = new Headers(options.headers);
@@ -74,7 +74,13 @@ async function request<TResponse>(path: string, options: RequestInit & { token?:
 
   if (!response.ok) {
     const payload = await response.json().catch(() => null);
-    const message = typeof payload?.message === "string" ? payload.message : "Request failed.";
+    const issueMessage = Array.isArray(payload?.message?.issues) ? payload.message.issues[0]?.message : undefined;
+    const message =
+      typeof issueMessage === "string"
+        ? issueMessage
+        : typeof payload?.message === "string"
+          ? payload.message
+          : "Request failed.";
     throw new Error(message);
   }
 

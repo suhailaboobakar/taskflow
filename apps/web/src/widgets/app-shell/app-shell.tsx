@@ -281,7 +281,7 @@ function SessionPanel({ setSession }: { setSession: (session: AuthResponse) => v
         >
           {mode === "register" ? <Input label="Name" name="name" placeholder="Avery Stone" required /> : null}
           <Input label="Email" name="email" placeholder="avery@example.com" required type="email" />
-          <Input label="Password" minLength={8} name="password" placeholder="At least 8 characters" required type="password" />
+          <Input label="Password" minLength={12} name="password" placeholder="At least 12 characters" required type="password" />
           {error ? <p className="rounded-2xl bg-red-500/10 px-3 py-2 text-sm text-red-700 dark:text-red-200">{error}</p> : null}
           <Button disabled={mutation.isPending} type="submit">
             <Check aria-hidden="true" className="size-4" />
