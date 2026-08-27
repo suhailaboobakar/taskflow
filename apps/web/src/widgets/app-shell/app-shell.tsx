@@ -1,5 +1,5 @@
 import type * as React from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { QueryKey, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import {
   Bell,
@@ -39,7 +39,7 @@ import { Button } from "../../shared/ui/button";
 import { GlassPanel } from "../../shared/ui/glass-panel";
 
 const sessionStorageKey = "taskflow.session";
-const taskQueryKey = ["tasks"];
+const taskQueryKey = (userId?: string): QueryKey => ["tasks", userId ?? "anonymous"];
 
 const navItems = [
   { label: "Today", icon: CheckCircle2, active: true },
@@ -66,20 +66,21 @@ export function AppShell(): React.JSX.Element {
   const [session, setSession] = useState<AuthResponse | null>(() => readSession());
   const queryClient = useQueryClient();
   const token = session?.tokens.accessToken;
+  const tasksKey = taskQueryKey(session?.user.id);
 
   useEffect(() => {
     if (session) {
       localStorage.setItem(sessionStorageKey, JSON.stringify(session));
     } else {
       localStorage.removeItem(sessionStorageKey);
-      queryClient.removeQueries({ queryKey: taskQueryKey });
+      queryClient.removeQueries({ queryKey: ["tasks"] });
     }
   }, [queryClient, session]);
 
   const taskQuery = useQuery({
     enabled: Boolean(token),
     queryFn: () => listTasks(token ?? ""),
-    queryKey: taskQueryKey
+    queryKey: tasksKey
   });
 
   const taskData = taskQuery.data ?? emptyTaskResponse;
@@ -92,7 +93,7 @@ export function AppShell(): React.JSX.Element {
         <section className="flex min-w-0 flex-col gap-4">
           <TopBar session={session} onLogout={() => setSession(null)} />
           <div className="grid gap-4 xl:grid-cols-[1fr_340px]">
-            <TaskCanvas isLoading={taskQuery.isLoading} session={session} setSession={setSession} taskData={taskData} token={token} />
+            <TaskCanvas isLoading={taskQuery.isLoading} session={session} setSession={setSession} taskData={taskData} taskQueryKey={tasksKey} token={token} />
             <InsightRail isConnected={Boolean(session)} stats={taskData.stats} />
           </div>
         </section>
@@ -185,12 +186,14 @@ function TaskCanvas({
   session,
   setSession,
   taskData,
+  taskQueryKey,
   token
 }: {
   isLoading: boolean;
   session: AuthResponse | null;
   setSession: (session: AuthResponse | null) => void;
   taskData: TaskListResponse;
+  taskQueryKey: QueryKey;
   token?: string;
 }): React.JSX.Element {
   const activeTasks = useMemo(() => taskData.items.filter((task) => task.status === "ACTIVE"), [taskData.items]);
@@ -215,7 +218,7 @@ function TaskCanvas({
         </div>
 
         {session && token ? (
-          <TaskWorkspace activeTasks={activeTasks} completedTasks={completedTasks} isLoading={isLoading} token={token} />
+          <TaskWorkspace activeTasks={activeTasks} completedTasks={completedTasks} isLoading={isLoading} taskQueryKey={taskQueryKey} token={token} />
         ) : (
           <SessionPanel setSession={setSession} />
         )}
@@ -297,30 +300,34 @@ function TaskWorkspace({
   activeTasks,
   completedTasks,
   isLoading,
+  taskQueryKey,
   token
 }: {
   activeTasks: Task[];
   completedTasks: Task[];
   isLoading: boolean;
+  taskQueryKey: QueryKey;
   token: string;
 }): React.JSX.Element {
   return (
     <div className="mt-6 grid gap-5">
-      <QuickAddTask token={token} />
+      <QuickAddTask taskQueryKey={taskQueryKey} token={token} />
       <div className="grid gap-5 lg:grid-cols-[1fr_320px]">
-        <TaskList emptyLabel={isLoading ? "Loading tasks" : "Your active list is clear"} tasks={activeTasks} title="Active" token={token} />
-        <TaskList emptyLabel="Completed tasks land here" tasks={completedTasks} title="Completed" token={token} />
+        <TaskList emptyLabel={isLoading ? "Loading tasks" : "Your active list is clear"} taskQueryKey={taskQueryKey} tasks={activeTasks} title="Active" token={token} />
+        <TaskList emptyLabel="Completed tasks land here" taskQueryKey={taskQueryKey} tasks={completedTasks} title="Completed" token={token} />
       </div>
     </div>
   );
 }
 
-function QuickAddTask({ token }: { token: string }): React.JSX.Element {
+function QuickAddTask({ taskQueryKey, token }: { taskQueryKey: QueryKey; token: string }): React.JSX.Element {
   const queryClient = useQueryClient();
+  const [error, setError] = useState<string | null>(null);
   const [priority, setPriority] = useState<TaskPriority>("NONE");
   const mutation = useMutation({
     mutationFn: (input: CreateTaskPayload) => createTask(token, input),
     onMutate: async (input) => {
+      setError(null);
       await queryClient.cancelQueries({ queryKey: taskQueryKey });
       const previous = queryClient.getQueryData<TaskListResponse>(taskQueryKey);
       const optimisticTask = makeOptimisticTask(input, priority);
@@ -329,6 +336,7 @@ function QuickAddTask({ token }: { token: string }): React.JSX.Element {
     },
     onError: (_error, _input, context) => {
       queryClient.setQueryData(taskQueryKey, context?.previous);
+      setError(_error instanceof Error ? _error.message : "Task could not be saved.");
     },
     onSettled: () => queryClient.invalidateQueries({ queryKey: taskQueryKey })
   });
@@ -402,11 +410,24 @@ function QuickAddTask({ token }: { token: string }): React.JSX.Element {
         name="description"
         placeholder="Notes, context, or next action"
       />
+      {error ? <p className="rounded-2xl bg-red-500/10 px-3 py-2 text-sm text-red-700 dark:text-red-200">{error}</p> : null}
     </form>
   );
 }
 
-function TaskList({ emptyLabel, tasks, title, token }: { emptyLabel: string; tasks: Task[]; title: string; token: string }): React.JSX.Element {
+function TaskList({
+  emptyLabel,
+  taskQueryKey,
+  tasks,
+  title,
+  token
+}: {
+  emptyLabel: string;
+  taskQueryKey: QueryKey;
+  tasks: Task[];
+  title: string;
+  token: string;
+}): React.JSX.Element {
   return (
     <section className="min-w-0">
       <div className="mb-3 flex items-center justify-between">
@@ -414,13 +435,13 @@ function TaskList({ emptyLabel, tasks, title, token }: { emptyLabel: string; tas
         <span className="rounded-full bg-white/32 px-3 py-1 text-xs font-medium text-muted-foreground dark:bg-white/8">{tasks.length}</span>
       </div>
       <div className="grid gap-3">
-        {tasks.length > 0 ? tasks.map((task) => <TaskCard key={task.id} task={task} token={token} />) : <EmptyTaskState label={emptyLabel} />}
+        {tasks.length > 0 ? tasks.map((task) => <TaskCard key={task.id} task={task} taskQueryKey={taskQueryKey} token={token} />) : <EmptyTaskState label={emptyLabel} />}
       </div>
     </section>
   );
 }
 
-function TaskCard({ task, token }: { task: Task; token: string }): React.JSX.Element {
+function TaskCard({ task, taskQueryKey, token }: { task: Task; taskQueryKey: QueryKey; token: string }): React.JSX.Element {
   const queryClient = useQueryClient();
   const patchMutation = useMutation({
     mutationFn: (input: { id: string; patch: UpdateTaskPayload }) => updateTask(token, input.id, input.patch),
