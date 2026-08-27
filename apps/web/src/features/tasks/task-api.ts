@@ -31,8 +31,12 @@ export interface TaskListResponse {
 }
 
 export interface AuthResponse {
-  accessToken: string;
-  refreshToken: string;
+  tokens: {
+    accessToken: string;
+    accessTokenExpiresAt: string;
+    refreshToken: string;
+    refreshTokenExpiresAt: string;
+  };
   user: {
     email: string;
     id: string;

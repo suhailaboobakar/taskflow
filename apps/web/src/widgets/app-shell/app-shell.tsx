@@ -65,7 +65,7 @@ const emptyTaskResponse: TaskListResponse = {
 export function AppShell(): React.JSX.Element {
   const [session, setSession] = useState<AuthResponse | null>(() => readSession());
   const queryClient = useQueryClient();
-  const token = session?.accessToken;
+  const token = session?.tokens.accessToken;
 
   useEffect(() => {
     if (session) {
@@ -590,7 +590,12 @@ function StatPill({ label, value }: { label: string; value: number }): React.JSX
 function readSession(): AuthResponse | null {
   try {
     const value = localStorage.getItem(sessionStorageKey);
-    return value ? (JSON.parse(value) as AuthResponse) : null;
+    if (!value) {
+      return null;
+    }
+
+    const session = JSON.parse(value) as AuthResponse;
+    return session.tokens?.accessToken ? session : null;
   } catch {
     return null;
   }
