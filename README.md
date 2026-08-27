@@ -30,3 +30,9 @@ Taskflow is a premium task management platform designed as a full-stack SaaS pro
 ## Phase 1 Status
 
 Project initialization establishes repository metadata, workspace scripts, environment documentation, and baseline Git hygiene.
+
+## Phase 2 Status
+
+Folder architecture establishes the monorepo boundaries for deployable apps, shared packages, infrastructure assets, cross-application tests, and architecture documentation.
+
+See `docs/architecture.md` for dependency direction and ownership rules.
