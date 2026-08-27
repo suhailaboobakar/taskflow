@@ -4,10 +4,10 @@
     "baseUrl": "./src",
     "declaration": false,
     "module": "commonjs",
-    "outDir": "../../dist/apps/api",
+    "outDir": "dist",
     "rootDir": "./src",
     "sourceMap": true,
-    "tsBuildInfoFile": "../../dist/apps/api/tsconfig.app.tsbuildinfo",
+    "tsBuildInfoFile": "dist/tsconfig.app.tsbuildinfo",
     "types": ["node"]
   },
   "include": ["src/**/*.ts"],

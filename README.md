@@ -44,3 +44,7 @@ Backend setup establishes a buildable NestJS API application with validated envi
 ## Phase 4 Status
 
 Database setup establishes Prisma, PostgreSQL Docker infrastructure, the initial normalized schema, migration SQL, and a NestJS database module.
+
+## Phase 5 Status
+
+Authentication establishes REST endpoints for registration, login, token refresh, logout, password reset, Google OAuth, and protected user lookup.
