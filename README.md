@@ -40,3 +40,7 @@ See `docs/architecture.md` for dependency direction and ownership rules.
 ## Phase 3 Status
 
 Backend setup establishes a buildable NestJS API application with validated environment configuration, global request hardening, URI versioning, CORS, and initial health/meta feature modules.
+
+## Phase 4 Status
+
+Database setup establishes Prisma, PostgreSQL Docker infrastructure, the initial normalized schema, migration SQL, and a NestJS database module.

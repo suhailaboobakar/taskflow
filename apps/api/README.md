@@ -19,3 +19,13 @@ Each feature should keep transport, application services, domain rules, and pers
 - `GET /api/v1/meta` returns public API metadata.
 
 Configuration is loaded through `@nestjs/config` and validated with Zod before the server starts.
+
+## Phase 4 Database
+
+- `npm run db:validate -w @taskflow/api` validates the Prisma schema.
+- `npm run db:generate -w @taskflow/api` generates Prisma Client.
+- `npm run db:migrate -w @taskflow/api` applies migrations to a running PostgreSQL database.
+
+The initial schema models authentication, task organization, recurrence, attachments, collaboration surfaces, reminders, notifications, and activity history with normalized relationships.
+
+For local migration verification, start Docker Desktop first, run `docker compose up -d postgres`, then run `npm run db:migrate -w @taskflow/api` with `DATABASE_URL` set to the development database URL from `.env.example`.

@@ -13,6 +13,9 @@
   ],
   "scripts": {
     "build": "npm run build -w @taskflow/api && node ./scripts/verify-workspace.mjs",
+    "db:generate": "npm run db:generate -w @taskflow/api",
+    "db:migrate": "npm run db:migrate -w @taskflow/api",
+    "db:validate": "npm run db:validate -w @taskflow/api",
     "dev": "node ./scripts/verify-workspace.mjs",
     "lint": "node ./scripts/verify-workspace.mjs",
     "test": "node ./scripts/verify-workspace.mjs",

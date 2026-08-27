@@ -1,0 +1,420 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum AccountProvider {
+  GOOGLE
+  PASSWORD
+}
+
+enum ActivityAction {
+  ARCHIVED
+  ATTACHMENT_ADDED
+  CHECKLIST_ITEM_COMPLETED
+  COMMENTED
+  COMPLETED
+  CREATED
+  DELETED
+  FAVORITED
+  PINNED
+  RESTORED
+  SUBTASK_COMPLETED
+  UPDATED
+}
+
+enum NotificationChannel {
+  EMAIL
+  IN_APP
+  PUSH
+}
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  READ
+  FAILED
+}
+
+enum Priority {
+  NONE
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum RecurrenceFrequency {
+  DAILY
+  WEEKLY
+  MONTHLY
+  YEARLY
+}
+
+enum TaskStatus {
+  ACTIVE
+  COMPLETED
+  ARCHIVED
+  DELETED
+}
+
+enum ThemePreference {
+  LIGHT
+  DARK
+  SYSTEM
+}
+
+model User {
+  id                   String                @id @default(uuid()) @db.Uuid
+  email                String                @unique @db.VarChar(320)
+  name                 String                @db.VarChar(120)
+  passwordHash         String?               @map("password_hash")
+  avatarUrl            String?               @map("avatar_url") @db.VarChar(2048)
+  timezone             String                @default("UTC") @db.VarChar(80)
+  language             String                @default("en") @db.VarChar(16)
+  emailVerifiedAt      DateTime?             @map("email_verified_at") @db.Timestamptz(6)
+  createdAt            DateTime              @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt            DateTime              @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt            DateTime?             @map("deleted_at") @db.Timestamptz(6)
+  accounts             Account[]
+  activityEvents       ActivityEvent[]
+  attachments          Attachment[]
+  categories           Category[]
+  comments             Comment[]
+  notes                Note[]
+  notificationSettings NotificationSetting[]
+  notifications        Notification[]
+  passwordResetTokens  PasswordResetToken[]
+  projects             Project[]
+  refreshTokens        RefreshToken[]
+  tags                 Tag[]
+  taskAssignments      TaskAssignee[]
+  tasks                Task[]
+  userPreference       UserPreference?
+
+  @@index([deletedAt])
+  @@map("users")
+}
+
+model Account {
+  id                String          @id @default(uuid()) @db.Uuid
+  userId            String          @map("user_id") @db.Uuid
+  provider          AccountProvider
+  providerAccountId String          @map("provider_account_id") @db.VarChar(191)
+  createdAt         DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime        @updatedAt @map("updated_at") @db.Timestamptz(6)
+  user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+  @@map("accounts")
+}
+
+model RefreshToken {
+  id         String    @id @default(uuid()) @db.Uuid
+  userId     String    @map("user_id") @db.Uuid
+  tokenHash  String    @unique @map("token_hash") @db.VarChar(255)
+  rememberMe Boolean   @default(false) @map("remember_me")
+  userAgent  String?   @map("user_agent") @db.VarChar(512)
+  ipAddress  String?   @map("ip_address") @db.VarChar(64)
+  expiresAt  DateTime  @map("expires_at") @db.Timestamptz(6)
+  revokedAt  DateTime? @map("revoked_at") @db.Timestamptz(6)
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("refresh_tokens")
+}
+
+model PasswordResetToken {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  tokenHash String    @unique @map("token_hash") @db.VarChar(255)
+  expiresAt DateTime  @map("expires_at") @db.Timestamptz(6)
+  usedAt    DateTime? @map("used_at") @db.Timestamptz(6)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("password_reset_tokens")
+}
+
+model UserPreference {
+  id               String          @id @default(uuid()) @db.Uuid
+  userId           String          @unique @map("user_id") @db.Uuid
+  theme            ThemePreference @default(SYSTEM)
+  sidebarCollapsed Boolean         @default(false) @map("sidebar_collapsed")
+  weekStartsOn     Int             @default(1) @map("week_starts_on")
+  reduceMotion     Boolean         @default(false) @map("reduce_motion")
+  createdAt        DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime        @updatedAt @map("updated_at") @db.Timestamptz(6)
+  user             User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_preferences")
+}
+
+model NotificationSetting {
+  id        String              @id @default(uuid()) @db.Uuid
+  userId    String              @map("user_id") @db.Uuid
+  channel   NotificationChannel
+  enabled   Boolean             @default(true)
+  createdAt DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime            @updatedAt @map("updated_at") @db.Timestamptz(6)
+  user      User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, channel])
+  @@map("notification_settings")
+}
+
+model Notification {
+  id        String              @id @default(uuid()) @db.Uuid
+  userId    String              @map("user_id") @db.Uuid
+  taskId    String?             @map("task_id") @db.Uuid
+  channel   NotificationChannel
+  status    NotificationStatus  @default(PENDING)
+  title     String              @db.VarChar(160)
+  body      String              @db.Text
+  readAt    DateTime?           @map("read_at") @db.Timestamptz(6)
+  createdAt DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
+  user      User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task      Task?               @relation(fields: [taskId], references: [id], onDelete: SetNull)
+
+  @@index([userId, status])
+  @@index([taskId])
+  @@map("notifications")
+}
+
+model Project {
+  id          String     @id @default(uuid()) @db.Uuid
+  ownerId     String     @map("owner_id") @db.Uuid
+  name        String     @db.VarChar(120)
+  description String?    @db.Text
+  color       String     @default("#6C5CE7") @db.VarChar(32)
+  icon        String     @default("sparkles") @db.VarChar(64)
+  isFavorite  Boolean    @default(false) @map("is_favorite")
+  isArchived  Boolean    @default(false) @map("is_archived")
+  createdAt   DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime   @updatedAt @map("updated_at") @db.Timestamptz(6)
+  owner       User       @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  categories  Category[]
+  tasks       Task[]
+
+  @@index([ownerId, isArchived])
+  @@map("projects")
+}
+
+model Category {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  projectId String?  @map("project_id") @db.Uuid
+  name      String   @db.VarChar(120)
+  color     String   @default("#00B894") @db.VarChar(32)
+  icon      String   @default("folder") @db.VarChar(64)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  tasks     Task[]
+
+  @@unique([userId, name])
+  @@index([projectId])
+  @@map("categories")
+}
+
+model Tag {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  name      String    @db.VarChar(80)
+  color     String    @default("#0984E3") @db.VarChar(32)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tasks     TaskTag[]
+
+  @@unique([userId, name])
+  @@map("tags")
+}
+
+model Task {
+  id                   String          @id @default(uuid()) @db.Uuid
+  ownerId              String          @map("owner_id") @db.Uuid
+  projectId            String?         @map("project_id") @db.Uuid
+  categoryId           String?         @map("category_id") @db.Uuid
+  parentTaskId         String?         @map("parent_task_id") @db.Uuid
+  title                String          @db.VarChar(240)
+  description          String?         @db.Text
+  markdown             String?         @db.Text
+  priority             Priority        @default(NONE)
+  status               TaskStatus      @default(ACTIVE)
+  dueDate              DateTime?       @map("due_date") @db.Date
+  dueAt                DateTime?       @map("due_at") @db.Timestamptz(6)
+  estimatedMinutes     Int?            @map("estimated_minutes")
+  completedAt          DateTime?       @map("completed_at") @db.Timestamptz(6)
+  completionPercentage Int             @default(0) @map("completion_percentage")
+  color                String?         @db.VarChar(32)
+  emoji                String?         @db.VarChar(32)
+  isPinned             Boolean         @default(false) @map("is_pinned")
+  isFavorite           Boolean         @default(false) @map("is_favorite")
+  archivedAt           DateTime?       @map("archived_at") @db.Timestamptz(6)
+  deletedAt            DateTime?       @map("deleted_at") @db.Timestamptz(6)
+  sortOrder            Int             @default(0) @map("sort_order")
+  createdAt            DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt            DateTime        @updatedAt @map("updated_at") @db.Timestamptz(6)
+  owner                User            @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  project              Project?        @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  category             Category?       @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  parentTask           Task?           @relation("TaskHierarchy", fields: [parentTaskId], references: [id], onDelete: Cascade)
+  subtasks             Task[]          @relation("TaskHierarchy")
+  activityEvents       ActivityEvent[]
+  assignees            TaskAssignee[]
+  attachments          Attachment[]
+  checklistItems       ChecklistItem[]
+  comments             Comment[]
+  notes                Note[]
+  notifications        Notification[]
+  recurrence           TaskRecurrence?
+  reminders            Reminder[]
+  tags                 TaskTag[]
+
+  @@index([ownerId, status, dueAt])
+  @@index([ownerId, isPinned])
+  @@index([ownerId, isFavorite])
+  @@index([projectId])
+  @@index([categoryId])
+  @@index([parentTaskId])
+  @@map("tasks")
+}
+
+model TaskAssignee {
+  id         String   @id @default(uuid()) @db.Uuid
+  taskId     String   @map("task_id") @db.Uuid
+  userId     String   @map("user_id") @db.Uuid
+  assignedAt DateTime @default(now()) @map("assigned_at") @db.Timestamptz(6)
+  task       Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([taskId, userId])
+  @@index([userId])
+  @@map("task_assignees")
+}
+
+model TaskTag {
+  taskId String @map("task_id") @db.Uuid
+  tagId  String @map("tag_id") @db.Uuid
+  task   Task   @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  tag    Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([taskId, tagId])
+  @@index([tagId])
+  @@map("task_tags")
+}
+
+model TaskRecurrence {
+  id         String              @id @default(uuid()) @db.Uuid
+  taskId     String              @unique @map("task_id") @db.Uuid
+  frequency  RecurrenceFrequency
+  interval   Int                 @default(1)
+  daysOfWeek Int[]               @default([]) @map("days_of_week")
+  endAt      DateTime?           @map("end_at") @db.Timestamptz(6)
+  createdAt  DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime            @updatedAt @map("updated_at") @db.Timestamptz(6)
+  task       Task                @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@map("task_recurrences")
+}
+
+model ChecklistItem {
+  id          String    @id @default(uuid()) @db.Uuid
+  taskId      String    @map("task_id") @db.Uuid
+  title       String    @db.VarChar(240)
+  isCompleted Boolean   @default(false) @map("is_completed")
+  completedAt DateTime? @map("completed_at") @db.Timestamptz(6)
+  sortOrder   Int       @default(0) @map("sort_order")
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  task        Task      @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([taskId, sortOrder])
+  @@map("checklist_items")
+}
+
+model Attachment {
+  id           String   @id @default(uuid()) @db.Uuid
+  taskId       String   @map("task_id") @db.Uuid
+  uploadedById String   @map("uploaded_by_id") @db.Uuid
+  fileName     String   @map("file_name") @db.VarChar(255)
+  mimeType     String   @map("mime_type") @db.VarChar(120)
+  sizeBytes    Int      @map("size_bytes")
+  storageKey   String   @map("storage_key") @db.VarChar(512)
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  task         Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  uploadedBy   User     @relation(fields: [uploadedById], references: [id], onDelete: Restrict)
+
+  @@index([taskId])
+  @@index([uploadedById])
+  @@map("attachments")
+}
+
+model Note {
+  id        String   @id @default(uuid()) @db.Uuid
+  taskId    String   @map("task_id") @db.Uuid
+  authorId  String   @map("author_id") @db.Uuid
+  markdown  String   @db.Text
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Restrict)
+
+  @@index([taskId])
+  @@index([authorId])
+  @@map("notes")
+}
+
+model Comment {
+  id        String   @id @default(uuid()) @db.Uuid
+  taskId    String   @map("task_id") @db.Uuid
+  authorId  String   @map("author_id") @db.Uuid
+  body      String   @db.Text
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Restrict)
+
+  @@index([taskId])
+  @@index([authorId])
+  @@map("comments")
+}
+
+model ActivityEvent {
+  id        String         @id @default(uuid()) @db.Uuid
+  taskId    String         @map("task_id") @db.Uuid
+  actorId   String         @map("actor_id") @db.Uuid
+  action    ActivityAction
+  metadata  Json           @default("{}")
+  createdAt DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  task      Task           @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  actor     User           @relation(fields: [actorId], references: [id], onDelete: Restrict)
+
+  @@index([taskId, createdAt])
+  @@index([actorId])
+  @@map("activity_events")
+}
+
+model Reminder {
+  id        String    @id @default(uuid()) @db.Uuid
+  taskId    String    @map("task_id") @db.Uuid
+  remindAt  DateTime  @map("remind_at") @db.Timestamptz(6)
+  sentAt    DateTime? @map("sent_at") @db.Timestamptz(6)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  task      Task      @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([taskId])
+  @@index([remindAt, sentAt])
+  @@map("reminders")
+}
