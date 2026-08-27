@@ -43,3 +43,12 @@ For local migration verification, start Docker Desktop first, run `docker compos
 - `GET /api/v1/auth/me` returns the authenticated user for a bearer access token.
 
 Password hashes use bcrypt, request bodies use Zod validation, and refresh tokens are stored as SHA-256 hashes.
+
+## Phase 7 Task CRUD
+
+- `GET /api/v1/tasks` lists the authenticated user's active and completed tasks with summary stats.
+- `POST /api/v1/tasks` creates a task for the authenticated user.
+- `PATCH /api/v1/tasks/:id` updates task fields, including completion, pin, and favorite state.
+- `DELETE /api/v1/tasks/:id` soft-deletes a task.
+
+All task routes require a bearer access token and enforce user ownership before mutation.

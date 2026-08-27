@@ -4,6 +4,7 @@ import { configuration, validateEnvironment } from "../config/app.config";
 import { AuthModule } from "../features/auth/auth.module";
 import { HealthModule } from "../features/health/health.module";
 import { MetaModule } from "../features/meta/meta.module";
+import { TasksModule } from "../features/tasks/tasks.module";
 import { DatabaseModule } from "../infrastructure/database/database.module";
 
 @Module({
@@ -17,7 +18,8 @@ import { DatabaseModule } from "../infrastructure/database/database.module";
     AuthModule,
     DatabaseModule,
     HealthModule,
-    MetaModule
+    MetaModule,
+    TasksModule
   ]
 })
 export class AppModule {}

@@ -53,3 +53,7 @@ Authentication establishes REST endpoints for registration, login, token refresh
 
 UI system setup establishes the React/Vite frontend, Tailwind design tokens, shadcn-style primitives, theme persistence, app providers, and the first premium responsive shell.
 
+## Phase 7 Status
+
+Task CRUD establishes protected task REST endpoints, Zod-validated create/update/delete workflows, user-owned task listing and stats, and a React task workspace with persisted auth, keyboard-friendly quick add, and optimistic mutations.
+

@@ -14,3 +14,7 @@ Current boundaries:
 - `src/widgets`: Composed surfaces that combine multiple features for a screen.
 
 Run locally with `npm run dev -w @taskflow/web`.
+
+## Phase 7 Task CRUD
+
+The app shell now includes persisted auth, protected task API calls, keyboard-friendly quick add, optimistic task creation, optimistic completion/pin/favorite/delete actions, and live task metrics from `GET /api/v1/tasks`.
