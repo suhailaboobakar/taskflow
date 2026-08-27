@@ -1,12 +1,16 @@
 # Web App
 
-The web app will be the premium Taskflow client experience.
+The web app is the premium Taskflow client experience.
 
-Planned boundaries:
+## Phase 6 UI System
+
+Phase 6 establishes the React 19, Vite, TypeScript, Tailwind CSS, shadcn-style primitive, Framer Motion, Zustand, and TanStack Query foundation.
+
+Current boundaries:
 
 - `src/app`: Application bootstrap, providers, routing, and global composition.
-- `src/features`: Product features such as auth, tasks, dashboard, search, and settings.
-- `src/shared`: Client-only shared utilities, hooks, and components.
+- `src/features`: Product features such as theme, auth, tasks, dashboard, search, and settings.
+- `src/shared`: Client-only shared utilities, styles, and UI primitives.
 - `src/widgets`: Composed surfaces that combine multiple features for a screen.
 
-Feature folders should keep UI, hooks, state, schemas, and tests close to the behavior they support.
+Run locally with `npm run dev -w @taskflow/web`.

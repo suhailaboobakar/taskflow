@@ -12,14 +12,14 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "npm run build -w @taskflow/api && node ./scripts/verify-workspace.mjs",
+    "build": "npm run build -w @taskflow/api && npm run build -w @taskflow/web && node ./scripts/verify-workspace.mjs",
     "db:generate": "npm run db:generate -w @taskflow/api",
     "db:migrate": "npm run db:migrate -w @taskflow/api",
     "db:validate": "npm run db:validate -w @taskflow/api",
-    "dev": "node ./scripts/verify-workspace.mjs",
+    "dev": "npm run dev -w @taskflow/web",
     "lint": "node ./scripts/verify-workspace.mjs",
     "test": "node ./scripts/verify-workspace.mjs",
-    "typecheck": "npm run typecheck -w @taskflow/api && node ./scripts/verify-workspace.mjs",
+    "typecheck": "npm run typecheck -w @taskflow/api && npm run typecheck -w @taskflow/web && node ./scripts/verify-workspace.mjs",
     "format": "node ./scripts/verify-workspace.mjs"
   },
   "keywords": [

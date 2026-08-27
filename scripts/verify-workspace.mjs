@@ -14,6 +14,21 @@ const requiredFiles = [
   "docs/architecture.md",
   "apps/README.md",
   "apps/web/README.md",
+  "apps/web/package.json",
+  "apps/web/index.html",
+  "apps/web/vite.config.ts",
+  "apps/web/tailwind.config.ts",
+  "apps/web/postcss.config.js",
+  "apps/web/src/main.tsx",
+  "apps/web/src/app/app.tsx",
+  "apps/web/src/app/providers/app-providers.tsx",
+  "apps/web/src/app/routes/home-route.tsx",
+  "apps/web/src/features/theme/theme.store.tsx",
+  "apps/web/src/shared/lib/cn.ts",
+  "apps/web/src/shared/styles/globals.css",
+  "apps/web/src/shared/ui/button.tsx",
+  "apps/web/src/shared/ui/glass-panel.tsx",
+  "apps/web/src/widgets/app-shell/app-shell.tsx",
   "apps/api/README.md",
   "apps/api/.env.example",
   "apps/api/package.json",
@@ -56,3 +71,4 @@ if (missingFiles.length > 0) {
 }
 
 console.log("Taskflow workspace foundation is ready.");
+
